@@ -48,6 +48,9 @@ dependencies:
   supabase_flutter: ^2.15.4
   pdf: ^3.11.3
 
+dependency_overrides:
+  app_links: 6.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
