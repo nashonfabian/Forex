@@ -39,7 +39,27 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_index]),
+        title: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: ColoredBox(
+                color: Colors.black,
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: Image.asset(
+                    'assets/images/brand_logo.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(_titles[_index]),
+          ],
+        ),
         actions: [
           const _SyncStatusChip(),
           IconButton(
@@ -119,7 +139,8 @@ class _SyncStatusChip extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.only(right: 4),
         child: ActionChip(
-          avatar: Icon(_icon(state.phase), size: 16, color: syncPhaseColor(context, state.phase)),
+          avatar: Icon(_icon(state.phase),
+              size: 16, color: syncPhaseColor(context, state.phase)),
           label: Text(state.label),
           visualDensity: VisualDensity.compact,
           onPressed: () => Navigator.of(context).push(
