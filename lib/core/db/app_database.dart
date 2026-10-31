@@ -5,16 +5,22 @@ import 'migration.dart';
 import 'migrations.dart';
 
 class AppDatabase {
-  AppDatabase({this.fileName = 'my_market_lab.db', List<Migration>? migrations})
-      : migrations = migrations ?? appMigrations;
+  AppDatabase({
+    this.fileName = 'my_market_lab.db',
+    this.databasePath,
+    List<Migration>? migrations,
+  }) : migrations = migrations ?? appMigrations;
 
   final String fileName;
+  final String? databasePath;
   final List<Migration> migrations;
   Future<Database>? _opening;
 
   Future<Database> get db => _opening ??= _open();
 
   Future<Database> _open() async {
+    final path = databasePath;
+    if (path != null) return openAt(path, migrations);
     final dir = await getDatabasesPath();
     return openAt(p.join(dir, fileName), migrations);
   }

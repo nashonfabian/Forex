@@ -9,6 +9,7 @@ import '../../widgets/common.dart';
 import '../../widgets/image_thumb.dart';
 import 'case_detail_screen.dart';
 import 'case_form_screen.dart';
+import 'historical_replay_screen.dart';
 import 'image_import.dart';
 import 'image_viewer_screen.dart';
 
@@ -166,13 +167,27 @@ class _CasesTabState extends ConsumerState<_CasesTab> {
           alignment: Alignment.centerRight,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-            child: FilledButton.tonalIcon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(builder: (_) => const CaseFormScreen()),
-              ),
-              icon: const Icon(Icons.add),
-              label: const Text('New case'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => const HistoricalReplayScreen()),
+                  ),
+                  icon: const Icon(Icons.history_toggle_off),
+                  label: const Text('Replay'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => const CaseFormScreen()),
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: const Text('New case'),
+                ),
+              ],
             ),
           ),
         ),

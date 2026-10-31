@@ -12,9 +12,18 @@ const kTimeframes = ['1M', '5M', '15M', '30M', '1H', '4H', '1D'];
 
 /// Create or edit a research case. The hypothesis block can be edited until it is locked.
 class CaseFormScreen extends ConsumerStatefulWidget {
-  const CaseFormScreen({super.key, this.caseId});
+  const CaseFormScreen({
+    super.key,
+    this.caseId,
+    this.initialInstrument,
+    this.initialTimeframe,
+    this.initialObservedAt,
+  });
 
   final String? caseId;
+  final String? initialInstrument;
+  final String? initialTimeframe;
+  final DateTime? initialObservedAt;
 
   @override
   ConsumerState<CaseFormScreen> createState() => _CaseFormScreenState();
@@ -46,6 +55,9 @@ class _CaseFormScreenState extends ConsumerState<CaseFormScreen> {
   void initState() {
     super.initState();
     _id = widget.caseId;
+    if (widget.initialInstrument != null) _instrument.text = widget.initialInstrument!;
+    if (widget.initialTimeframe != null) _timeframe = widget.initialTimeframe!;
+    if (widget.initialObservedAt != null) _observedAt = widget.initialObservedAt!.toLocal();
     if (_id != null) {
       _loading = true;
       _load();

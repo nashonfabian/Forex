@@ -4,6 +4,7 @@ import '../data/export/backup_service.dart';
 import '../data/export/case_report.dart';
 import '../data/images/image_store.dart';
 import '../data/repositories/learning_repository.dart';
+import '../data/repositories/historical_data_repository.dart';
 import '../data/repositories/meta_repository.dart';
 import '../data/repositories/notes_repository.dart';
 import '../data/repositories/research_repository.dart';
@@ -54,6 +55,13 @@ final linksRepositoryProvider = Provider<LinksRepository>((ref) => LinksReposito
 
 final researchRepositoryProvider = Provider<ResearchRepository>((ref) => ResearchRepository(
     ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+
+final historicalDataRepositoryProvider = Provider<HistoricalDataRepository>((ref) =>
+    HistoricalDataRepository(
+      ref.watch(appDatabaseProvider),
+      ref.watch(tableChangesProvider),
+      ref.watch(clockProvider),
+    ));
 
 final tradesRepositoryProvider = Provider<TradesRepository>((ref) => TradesRepository(
     ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
