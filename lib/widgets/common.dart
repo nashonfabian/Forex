@@ -13,7 +13,9 @@ String friendlyError(Object e) {
   if (t.contains('hypothesis_locked')) {
     return 'The hypothesis is locked and can no longer be changed. Add an addendum instead.';
   }
-  if (t.contains('hypothesis_required')) return 'Write a hypothesis before locking it.';
+  if (t.contains('hypothesis_required')) {
+    return 'Write a hypothesis before locking it.';
+  }
   if (t.contains('outcome_requires_locked_hypothesis')) {
     return 'Lock the hypothesis before recording the outcome.';
   }
@@ -33,11 +35,15 @@ Future<bool> confirmDialog(
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel')),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
           child: Text(confirmLabel,
-              style: destructive ? TextStyle(color: Theme.of(ctx).colorScheme.error) : null),
+              style: destructive
+                  ? TextStyle(color: Theme.of(ctx).colorScheme.error)
+                  : null),
         ),
       ],
     ),
@@ -65,13 +71,17 @@ Future<Rec?> pickRec(
                 shrinkWrap: true,
                 itemCount: items.length,
                 itemBuilder: (_, i) => ListTile(
-                  title: Text(label(items[i]), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  title: Text(label(items[i]),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
                   subtitle: subtitle == null ? null : Text(subtitle(items[i])),
                   onTap: () => Navigator.pop(ctx, items[i]),
                 ),
               ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))],
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))
+      ],
     ),
   );
 }
@@ -97,7 +107,8 @@ Future<DateTime?> pickDateTime(BuildContext context, DateTime initial) async {
 }
 
 class SectionCard extends StatelessWidget {
-  const SectionCard({super.key, required this.title, required this.children, this.trailing});
+  const SectionCard(
+      {super.key, required this.title, required this.children, this.trailing});
 
   final String title;
   final List<Widget> children;
@@ -177,6 +188,7 @@ class LabeledField extends StatelessWidget {
     required this.controller,
     required this.label,
     this.hint,
+    this.helperText,
     this.minLines,
     this.maxLines = 1,
     this.keyboardType,
@@ -187,6 +199,7 @@ class LabeledField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String? hint;
+  final String? helperText;
   final int? minLines;
   final int maxLines;
   final TextInputType? keyboardType;
@@ -202,12 +215,14 @@ class LabeledField extends StatelessWidget {
         enabled: enabled,
         minLines: minLines,
         maxLines: maxLines,
-        keyboardType: keyboardType ?? (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
+        keyboardType: keyboardType ??
+            (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
         textCapitalization: TextCapitalization.sentences,
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
+          helperText: helperText,
           border: const OutlineInputBorder(),
           alignLabelWithHint: maxLines > 1,
         ),
@@ -253,7 +268,8 @@ class ChoiceRow extends StatelessWidget {
                   label: Text(pretty(o)),
                   selected: value == o,
                   onSelected: enabled
-                      ? (selected) => onChanged(selected ? o : (allowClear ? null : value))
+                      ? (selected) =>
+                          onChanged(selected ? o : (allowClear ? null : value))
                       : null,
                 ),
             ],
@@ -290,7 +306,8 @@ class SuggestField extends StatelessWidget {
             controller: controller,
             enabled: enabled,
             textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+            decoration: InputDecoration(
+                labelText: label, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 6),
           Wrap(
@@ -312,7 +329,12 @@ class SuggestField extends StatelessWidget {
 
 /// Date / date-time field that opens a picker when tapped.
 class PickerField extends StatelessWidget {
-  const PickerField({super.key, required this.label, required this.text, required this.onTap, this.enabled = true});
+  const PickerField(
+      {super.key,
+      required this.label,
+      required this.text,
+      required this.onTap,
+      this.enabled = true});
 
   final String label;
   final String text;
@@ -326,7 +348,8 @@ class PickerField extends StatelessWidget {
       child: InkWell(
         onTap: enabled ? onTap : null,
         child: InputDecorator(
-          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+          decoration: InputDecoration(
+              labelText: label, border: const OutlineInputBorder()),
           child: Text(text.isEmpty ? 'Tap to choose' : text),
         ),
       ),

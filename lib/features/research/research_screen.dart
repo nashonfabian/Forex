@@ -12,6 +12,7 @@ import 'case_form_screen.dart';
 import 'historical_replay_screen.dart';
 import 'image_import.dart';
 import 'image_viewer_screen.dart';
+import 'visual_backtesting_screen.dart';
 
 class ResearchScreen extends StatelessWidget {
   const ResearchScreen({super.key});
@@ -167,8 +168,9 @@ class _CasesTabState extends ConsumerState<_CasesTab> {
           alignment: Alignment.centerRight,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
               children: [
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.push(
@@ -178,7 +180,16 @@ class _CasesTabState extends ConsumerState<_CasesTab> {
                   icon: const Icon(Icons.history_toggle_off),
                   label: const Text('Replay'),
                 ),
-                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const VisualBacktestingScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.image_search_outlined),
+                  label: const Text('Visual backtesting'),
+                ),
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.push(
                     context,

@@ -11,6 +11,7 @@ import '../data/repositories/research_repository.dart';
 import '../data/repositories/reviews_repository.dart';
 import '../data/repositories/search_repository.dart';
 import '../data/repositories/trades_repository.dart';
+import '../data/repositories/visual_backtesting_repository.dart';
 import '../data/sync/sync_service.dart';
 import 'clock.dart';
 import 'db/app_database.dart';
@@ -65,6 +66,12 @@ final historicalDataRepositoryProvider = Provider<HistoricalDataRepository>((ref
 
 final tradesRepositoryProvider = Provider<TradesRepository>((ref) => TradesRepository(
     ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+
+final visualBacktestingRepositoryProvider = Provider<VisualBacktestingRepository>(
+    (ref) => VisualBacktestingRepository(
+        ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider),
+        ref.watch(clockProvider)));
 
 final reviewsRepositoryProvider = Provider<ReviewsRepository>((ref) => ReviewsRepository(
     ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
@@ -132,6 +139,17 @@ final tradesProvider = StreamProvider.autoDispose.family<List<Rec>, TradeFilter>
 
 final tradesSummaryProvider = StreamProvider.autoDispose<List<Rec>>(
     (ref) => ref.watch(tradesRepositoryProvider).watchSummary());
+
+final visualStrategiesProvider = StreamProvider.autoDispose<List<Rec>>(
+    (ref) => ref.watch(visualBacktestingRepositoryProvider).watchStrategies());
+
+final visualTestsProvider = StreamProvider.autoDispose.family<List<Rec>, String?>(
+    (ref, strategyId) => ref
+        .watch(visualBacktestingRepositoryProvider)
+        .watchTests(strategyId: strategyId));
+
+final visualTestResultsProvider = StreamProvider.autoDispose<List<Rec>>(
+    (ref) => ref.watch(visualBacktestingRepositoryProvider).watchTestResults());
 
 /// Key format: "<table>|<id>", for example "research_cases|abc".
 final linkedProvider = StreamProvider.autoDispose.family<List<LinkedItem>, String>((ref, key) {

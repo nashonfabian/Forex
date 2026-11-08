@@ -11,6 +11,7 @@ import '../../core/db/app_database.dart';
 import '../../core/db/table_changes.dart';
 import '../../core/rows.dart';
 import '../images/image_store.dart';
+import '../repositories/visual_backtesting_repository.dart';
 import '../sync/outbox.dart';
 import '../sync/sync_service.dart';
 
@@ -31,10 +32,15 @@ class BackupService {
   final Clock _clock;
   final ImageStore _images;
 
+  List<String> get _backupTables => [
+        ...SyncService.syncTables,
+        ...visualBacktestingTables,
+      ];
+
   Future<File> exportZip() async {
     final database = await _app.db;
     final tables = <String, Object?>{};
-    for (final table in SyncService.syncTables) {
+    for (final table in _backupTables) {
       tables[table] = await database.query(table);
     }
     final files = await database.rawQuery(
@@ -94,7 +100,7 @@ class BackupService {
       final now = _clock.nowIso();
       var inserted = 0;
       await database.transaction((txn) async {
-        for (final table in SyncService.syncTables) {
+        for (final table in _backupTables) {
           final rows = tables[table];
           if (rows is! List) continue;
           final cols = (await txn.rawQuery('PRAGMA table_info($table)'))
@@ -111,7 +117,9 @@ class BackupService {
             final result = await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.ignore);
             if (result > 0) {
               inserted++;
-              await Outbox.enqueue(txn, table, id, nowIso: now);
+              if (!visualBacktestingTables.contains(table)) {
+                await Outbox.enqueue(txn, table, id, nowIso: now);
+              }
             }
           }
         }
@@ -146,7 +154,7 @@ class BackupService {
         restoredImages++;
       }
 
-      _changes.notify(SyncService.syncTables);
+      _changes.notify(_backupTables);
       return BackupSummary(rows: inserted, images: restoredImages);
     } finally {
       try {

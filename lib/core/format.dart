@@ -1,14 +1,74 @@
 import 'clock.dart';
 
 const _weekdays = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
 ];
 const _months = [
-  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 String _two(int n) => n.toString().padLeft(2, '0');
+
+int currencyFractionDigits(String? currencyCode) {
+  switch (currencyCode) {
+    case 'BIF':
+    case 'CLP':
+    case 'DJF':
+    case 'GNF':
+    case 'ISK':
+    case 'JPY':
+    case 'KMF':
+    case 'KRW':
+    case 'PYG':
+    case 'RWF':
+    case 'UGX':
+    case 'UYI':
+    case 'VND':
+    case 'VUV':
+    case 'XAF':
+    case 'XOF':
+    case 'XPF':
+      return 0;
+    case 'BHD':
+    case 'IQD':
+    case 'JOD':
+    case 'KWD':
+    case 'LYD':
+    case 'OMR':
+    case 'TND':
+      return 3;
+    case 'CLF':
+    case 'UYW':
+      return 4;
+    default:
+      return 2;
+  }
+}
+
+int _minorScale(int fractionDigits) {
+  var scale = 1;
+  for (var i = 0; i < fractionDigits; i++) {
+    scale *= 10;
+  }
+  return scale;
+}
 
 /// "Friday 16 October 2026"
 String formatLongDate(DateTime d) =>
@@ -41,8 +101,9 @@ String formatYmd(String? ymd) {
 }
 
 /// "2026-10-16" -> local midnight, or null.
-DateTime? parseYmd(String? ymd) =>
-    (ymd == null || ymd.length < 10) ? null : DateTime.tryParse('${ymd.substring(0, 10)}T00:00:00');
+DateTime? parseYmd(String? ymd) => (ymd == null || ymd.length < 10)
+    ? null
+    : DateTime.tryParse('${ymd.substring(0, 10)}T00:00:00');
 
 /// Monday of the week containing [d], as YYYY-MM-DD.
 String weekStartYmd(DateTime d) =>
@@ -69,32 +130,41 @@ String formatOffset(Duration offset) {
   return '$sign${_two(abs.inHours)}:${_two(abs.inMinutes.remainder(60))}';
 }
 
-/// Money is stored as integer minor units (cents). 123456 -> "1,234.56".
-String formatMinor(int? minor) {
+/// Money is stored as integer minor units. 123456 -> "1,234.56".
+String formatMinor(int? minor, {int fractionDigits = 2}) {
   if (minor == null) return '-';
   final negative = minor < 0;
   final abs = minor.abs();
-  final whole = (abs ~/ 100).toString();
-  final cents = (abs % 100).toString().padLeft(2, '0');
+  final scale = _minorScale(fractionDigits);
+  final whole = (abs ~/ scale).toString();
+  final fraction = fractionDigits == 0
+      ? ''
+      : '.${(abs % scale).toString().padLeft(fractionDigits, '0')}';
   final buf = StringBuffer();
   for (var i = 0; i < whole.length; i++) {
     if (i > 0 && (whole.length - i) % 3 == 0) buf.write(',');
     buf.write(whole[i]);
   }
-  return '${negative ? '-' : ''}$buf.$cents';
+  return '${negative ? '-' : ''}$buf$fraction';
 }
 
 /// "1,234.56" -> 123456. Empty or invalid -> null.
-int? parseMinor(String text) {
+int? parseMinor(String text, {int fractionDigits = 2}) {
   final t = text.trim().replaceAll(',', '');
   if (t.isEmpty) return null;
   final v = double.tryParse(t);
-  return v == null ? null : (v * 100).round();
+  if (v == null || !v.isFinite) return null;
+  final minor = v * _minorScale(fractionDigits);
+  if (!minor.isFinite) return null;
+  final rounded = minor.round();
+  return (minor - rounded).abs() < 0.000001 ? rounded : null;
 }
 
 double? parseDouble(String text) {
   final t = text.trim().replaceAll(',', '');
-  return t.isEmpty ? null : double.tryParse(t);
+  if (t.isEmpty) return null;
+  final value = double.tryParse(t);
+  return value == null || !value.isFinite ? null : value;
 }
 
 /// "not_started" -> "Not started"
@@ -105,7 +175,9 @@ String pretty(String? key) {
 }
 
 /// 12345 -> "123.45" (for filling a text field).
-String minorToText(int? minor) => minor == null ? '' : (minor / 100).toStringAsFixed(2);
+String minorToText(int? minor, {int fractionDigits = 2}) => minor == null
+    ? ''
+    : (minor / _minorScale(fractionDigits)).toStringAsFixed(fractionDigits);
 
 /// A number for a text field without trailing ".0".
 String numToText(double? v) {

@@ -21,7 +21,8 @@ class _TradesScreenState extends ConsumerState<TradesScreen> {
   @override
   Widget build(BuildContext context) {
     final trades = ref.watch(tradesProvider(TradeFilter(account: _account)));
-    final summary = ref.watch(tradesSummaryProvider).valueOrNull ?? const <Rec>[];
+    final summary =
+        ref.watch(tradesSummaryProvider).valueOrNull ?? const <Rec>[];
 
     return Column(
       children: [
@@ -47,7 +48,8 @@ class _TradesScreenState extends ConsumerState<TradesScreen> {
               FilledButton.tonalIcon(
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute<void>(builder: (_) => const TradeFormScreen()),
+                  MaterialPageRoute<void>(
+                      builder: (_) => const TradeFormScreen()),
                 ),
                 icon: const Icon(Icons.add),
                 label: const Text('New'),
@@ -58,20 +60,30 @@ class _TradesScreenState extends ConsumerState<TradesScreen> {
         if (summary.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: Row(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 for (final s in summary)
-                  Expanded(
+                  SizedBox(
+                    width: 180,
                     child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${pretty(s.s('account_type'))} account',
-                                style: Theme.of(context).textTheme.labelMedium),
-                            Text('${s.i('trade_count')} trades, ${s.i('closed_count')} closed'),
-                            Text('Net: ${formatMinor(s.i('net_minor'))}'),
+                            Text(
+                              '${pretty(s.s('account_type'))} account · ${s.sn('currency_code') ?? 'Currency unknown (legacy)'}',
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                            Text(
+                                '${s.i('trade_count')} trades, ${s.i('closed_count')} closed'),
+                            Text(
+                              s.sn('currency_code') == null
+                                  ? 'Realised net: unavailable (legacy currency not recorded)'
+                                  : 'Realised net: ${formatTradeMoney(s.sn('currency_code'), s.i('net_minor'))}',
+                            ),
                           ],
                         ),
                       ),
@@ -103,21 +115,26 @@ class _TradesScreenState extends ConsumerState<TradesScreen> {
                         pretty(t.s('account_type')),
                         pretty(t.s('status')),
                         formatLocalDate(t.sn('opened_at')),
-                        if (t.sn('case_title') != null) 'Case: ${t.s('case_title')}',
+                        if (t.sn('case_title') != null)
+                          'Case: ${t.s('case_title')}',
                         if (adherence != null) 'Rules $adherence',
                       ].join('  |  ')),
                       trailing: net == null
                           ? null
                           : Text(
-                              formatMinor(net),
+                              formatTradeMoney(t.sn('currency_code'), net),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: net >= 0 ? Colors.green.shade700 : Theme.of(context).colorScheme.error,
+                                color: net >= 0
+                                    ? Colors.green.shade700
+                                    : Theme.of(context).colorScheme.error,
                               ),
                             ),
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute<void>(builder: (_) => TradeFormScreen(tradeId: t.s('id'))),
+                        MaterialPageRoute<void>(
+                            builder: (_) =>
+                                TradeFormScreen(tradeId: t.s('id'))),
                       ),
                     ),
                   );

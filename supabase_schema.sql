@@ -182,8 +182,12 @@ create table if not exists public.trades (
   rule_notes text,
   process_notes text,
   review_text text,
-  status text NOT NULL DEFAULT 'open'
+  status text NOT NULL DEFAULT 'open',
+  currency_code text,
+  size_unit text
 );
+alter table public.trades add column if not exists currency_code text;
+alter table public.trades add column if not exists size_unit text;
 create index if not exists idx_trades_cursor on public.trades (owner_id, server_updated_at, id);
 alter table public.trades enable row level security;
 drop policy if exists own_rows on public.trades;
