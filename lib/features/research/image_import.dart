@@ -13,17 +13,35 @@ Future<void> pickAndImport(
   String? caseId,
   String? tradeId,
   String? phase,
+  String? instrument,
+  String? timeframe,
+  String? caption,
 }) async {
   try {
     final files = await ImagePicker().pickMultiImage();
-    if (files.isEmpty) return;
-    final result = await ref
-        .read(imageStoreProvider)
-        .importFiles(files, caseId: caseId, tradeId: tradeId, phase: phase);
-    if (!context.mounted) return;
+    if (files.isEmpty) {
+      return;
+    }
+    final result = await ref.read(imageStoreProvider).importFiles(
+          files,
+          caseId: caseId,
+          tradeId: tradeId,
+          phase: phase,
+          instrument: instrument,
+          timeframe: timeframe,
+          caption: caption,
+        );
+    if (!context.mounted) {
+      return;
+    }
     final parts = <String>['${result.imported} added'];
-    if (result.duplicates > 0) parts.add('${result.duplicates} already in your library');
-    if (result.failed > 0) parts.add('${result.failed} failed (${result.firstError ?? 'unknown error'})');
+    if (result.duplicates > 0) {
+      parts.add('${result.duplicates} already in your library');
+    }
+    if (result.failed > 0) {
+      parts.add(
+          '${result.failed} failed (${result.firstError ?? 'unknown error'})');
+    }
     snack(context, parts.join(', '));
   } catch (e) {
     if (context.mounted) snack(context, 'Could not import screenshots: $e');

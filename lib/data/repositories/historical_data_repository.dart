@@ -9,16 +9,25 @@ import '../../core/rows.dart';
 import 'base_repository.dart';
 import 'historical_csv.dart';
 
+const historicalDataTables = [
+  'historical_datasets',
+  'historical_candles',
+  'replay_sessions',
+  'replay_annotations',
+];
+
 class DatasetImportResult {
   const DatasetImportResult({
     required this.validation,
     this.datasetId,
+    this.duplicate = false,
   });
 
   final HistoricalCsvResult validation;
   final String? datasetId;
+  final bool duplicate;
 
-  bool get imported => datasetId != null;
+  bool get imported => datasetId != null && !duplicate;
 }
 
 class HistoricalDataRepository extends BaseRepository {
@@ -58,6 +67,25 @@ class HistoricalDataRepository extends BaseRepository {
       NaiveTimestampZone.local => 'local',
     };
     final digest = sha256.convert(utf8.encode(csv)).toString();
+    final existing = await (await db).query(
+      'historical_datasets',
+      columns: const ['id'],
+      where: 'sha256 = ? AND instrument = ? AND timeframe = ?',
+      whereArgs: [
+        digest,
+        normalizedInstrument,
+        timeframe.toUpperCase(),
+      ],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      return DatasetImportResult(
+        validation: validation,
+        datasetId: existing.first.s('id'),
+        duplicate: true,
+      );
+    }
+
     await write(
       const ['historical_datasets', 'historical_candles'],
       (txn, _) async {

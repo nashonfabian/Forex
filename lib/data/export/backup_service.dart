@@ -11,6 +11,7 @@ import '../../core/db/app_database.dart';
 import '../../core/db/table_changes.dart';
 import '../../core/rows.dart';
 import '../images/image_store.dart';
+import '../repositories/historical_data_repository.dart';
 import '../repositories/visual_backtesting_repository.dart';
 import '../sync/outbox.dart';
 import '../sync/sync_service.dart';
@@ -34,8 +35,14 @@ class BackupService {
 
   List<String> get _backupTables => [
         ...SyncService.syncTables,
+        ...historicalDataTables,
         ...visualBacktestingTables,
       ];
+
+  Set<String> get _localOnlyTables => {
+        ...historicalDataTables,
+        ...visualBacktestingTables,
+      };
 
   Future<File> exportZip() async {
     final database = await _app.db;
@@ -113,11 +120,11 @@ class BackupService {
               if (cols.contains(key)) row['$key'] = value;
             });
             final id = row['id'];
-            if (id is! String) continue;
+            if (id is! String && table != 'historical_candles') continue;
             final result = await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.ignore);
             if (result > 0) {
               inserted++;
-              if (!visualBacktestingTables.contains(table)) {
+              if (!_localOnlyTables.contains(table) && id is String) {
                 await Outbox.enqueue(txn, table, id, nowIso: now);
               }
             }

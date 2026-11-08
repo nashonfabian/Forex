@@ -78,6 +78,9 @@ class ImageStore {
     String? caseId,
     String? tradeId,
     String? phase,
+    String? instrument,
+    String? timeframe,
+    String? caption,
   }) async {
     final database = await _app.db;
     var imported = 0;
@@ -90,6 +93,20 @@ class ImageStore {
       File? copied;
       try {
         final bytes = await file.readAsBytes();
+        final sha = sha256.convert(bytes).toString();
+        final existing = await database.query(
+          'images',
+          columns: const ['id'],
+          where: 'sha256 = ? AND deleted_at IS NULL',
+          whereArgs: [sha],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) {
+          ids.add(existing.first.s('id'));
+          duplicates++;
+          continue;
+        }
+
         final id = newId();
         final ext = extensionOf(file.name);
         final relative = p.join('chartlab', '$id.$ext');
@@ -97,9 +114,6 @@ class ImageStore {
         await dest.writeAsBytes(bytes, flush: true);
         copied = dest;
 
-        final sha = sha256.convert(bytes).toString();
-        final dup = await database.query('images',
-            columns: ['id'], where: 'sha256 = ? AND deleted_at IS NULL', whereArgs: [sha], limit: 1);
         final size = await _dimensions(bytes);
         DateTime captured;
         try {
@@ -109,31 +123,61 @@ class ImageStore {
         }
 
         final now = _clock.nowIso();
-        await database.transaction((txn) async {
-          await insertIn(txn, 'images', {
-            'case_id': caseId,
-            'trade_id': tradeId,
-            'phase': phase,
-            'captured_at': captured.toUtc().toIso8601String(),
-            'mime': mimeFor(ext),
-            'width': size[0],
-            'height': size[1],
-            'bytes': bytes.length,
-            'sha256': sha,
-          }, now, id: id);
+        final storedId = await database.transaction<String>((txn) async {
+          final concurrentDuplicate = await txn.query(
+            'images',
+            columns: const ['id'],
+            where: 'sha256 = ? AND deleted_at IS NULL',
+            whereArgs: [sha],
+            limit: 1,
+          );
+          if (concurrentDuplicate.isNotEmpty) {
+            return concurrentDuplicate.first.s('id');
+          }
+          await insertIn(
+              txn,
+              'images',
+              {
+                'case_id': caseId,
+                'trade_id': tradeId,
+                'phase': phase,
+                'instrument': instrument?.trim().isEmpty == true
+                    ? null
+                    : instrument?.trim().toUpperCase(),
+                'timeframe': timeframe?.trim().isEmpty == true
+                    ? null
+                    : timeframe?.trim().toUpperCase(),
+                'caption':
+                    caption?.trim().isEmpty == true ? null : caption?.trim(),
+                'captured_at': captured.toUtc().toIso8601String(),
+                'mime': mimeFor(ext),
+                'width': size[0],
+                'height': size[1],
+                'bytes': bytes.length,
+                'sha256': sha,
+              },
+              now,
+              id: id);
           await txn.insert('image_files', {
             'image_id': id,
             'local_path': relative,
             'upload_state': 'local',
             'created_at': now,
           });
-          await Outbox.enqueue(txn, 'images', id, nowIso: now, op: 'blob_upload');
+          await Outbox.enqueue(txn, 'images', id,
+              nowIso: now, op: 'blob_upload');
+          return id;
         });
 
-        if (dup.isNotEmpty) duplicates++;
-        ids.add(id);
-        imported++;
-        copied = null;
+        if (storedId == id) {
+          imported++;
+          copied = null;
+        } else {
+          duplicates++;
+          ids.add(storedId);
+          await copied.delete();
+          copied = null;
+        }
       } catch (e) {
         failed++;
         firstError ??= '$e';
@@ -173,8 +217,8 @@ class ImageStore {
   /// The file on this phone for an image, or null if it is not here
   /// (for example a screenshot that arrived from the cloud and is not downloaded yet).
   Future<File?> localFile(String imageId) async {
-    final rows = await (await _app.db)
-        .query('image_files', where: 'image_id = ?', whereArgs: [imageId], limit: 1);
+    final rows = await (await _app.db).query('image_files',
+        where: 'image_id = ?', whereArgs: [imageId], limit: 1);
     if (rows.isEmpty) return null;
     final file = File(absolutePath(rows.first.s('local_path')));
     return await file.exists() ? file : null;
@@ -199,13 +243,15 @@ class ImageStore {
 
   Future<void> removeLocal(String imageId) async {
     final database = await _app.db;
-    final rows = await database.query('image_files', where: 'image_id = ?', whereArgs: [imageId]);
+    final rows = await database
+        .query('image_files', where: 'image_id = ?', whereArgs: [imageId]);
     for (final r in rows) {
       try {
         await File(absolutePath(r.s('local_path'))).delete();
       } catch (_) {}
     }
-    await database.delete('image_files', where: 'image_id = ?', whereArgs: [imageId]);
+    await database
+        .delete('image_files', where: 'image_id = ?', whereArgs: [imageId]);
   }
 
   /// Deletes files in the screenshot folder that no database row refers to

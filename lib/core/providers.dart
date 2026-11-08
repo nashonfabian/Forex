@@ -23,16 +23,20 @@ final clockProvider = Provider<Clock>((ref) => const SystemClock());
 
 /// The next four are created in main() and passed in as overrides.
 final appDatabaseProvider = Provider<AppDatabase>(
-  (ref) => throw UnimplementedError('appDatabaseProvider must be overridden in main()'),
+  (ref) => throw UnimplementedError(
+      'appDatabaseProvider must be overridden in main()'),
 );
 final tableChangesProvider = Provider<TableChanges>(
-  (ref) => throw UnimplementedError('tableChangesProvider must be overridden in main()'),
+  (ref) => throw UnimplementedError(
+      'tableChangesProvider must be overridden in main()'),
 );
 final imageStoreProvider = Provider<ImageStore>(
-  (ref) => throw UnimplementedError('imageStoreProvider must be overridden in main()'),
+  (ref) => throw UnimplementedError(
+      'imageStoreProvider must be overridden in main()'),
 );
 final syncServiceProvider = Provider<SyncService>(
-  (ref) => throw UnimplementedError('syncServiceProvider must be overridden in main()'),
+  (ref) => throw UnimplementedError(
+      'syncServiceProvider must be overridden in main()'),
 );
 
 final syncStateProvider = StreamProvider<SyncState>((ref) async* {
@@ -42,42 +46,51 @@ final syncStateProvider = StreamProvider<SyncState>((ref) async* {
 });
 
 // ---------------------------------------------------------------- repositories
-final learningRepositoryProvider = Provider<LearningRepository>((ref) => LearningRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final learningRepositoryProvider = Provider<LearningRepository>((ref) =>
+    LearningRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
-final notesRepositoryProvider = Provider<NotesRepository>((ref) => NotesRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final notesRepositoryProvider = Provider<NotesRepository>((ref) =>
+    NotesRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
 final tagsRepositoryProvider = Provider<TagsRepository>((ref) => TagsRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+    ref.watch(appDatabaseProvider),
+    ref.watch(tableChangesProvider),
+    ref.watch(clockProvider)));
 
-final linksRepositoryProvider = Provider<LinksRepository>((ref) => LinksRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final linksRepositoryProvider = Provider<LinksRepository>((ref) =>
+    LinksRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
-final researchRepositoryProvider = Provider<ResearchRepository>((ref) => ResearchRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final researchRepositoryProvider = Provider<ResearchRepository>((ref) =>
+    ResearchRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
-final historicalDataRepositoryProvider = Provider<HistoricalDataRepository>((ref) =>
-    HistoricalDataRepository(
-      ref.watch(appDatabaseProvider),
-      ref.watch(tableChangesProvider),
-      ref.watch(clockProvider),
-    ));
+final historicalDataRepositoryProvider =
+    Provider<HistoricalDataRepository>((ref) => HistoricalDataRepository(
+          ref.watch(appDatabaseProvider),
+          ref.watch(tableChangesProvider),
+          ref.watch(clockProvider),
+        ));
 
-final tradesRepositoryProvider = Provider<TradesRepository>((ref) => TradesRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final tradesRepositoryProvider = Provider<TradesRepository>((ref) =>
+    TradesRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
-final visualBacktestingRepositoryProvider = Provider<VisualBacktestingRepository>(
-    (ref) => VisualBacktestingRepository(
+final visualBacktestingRepositoryProvider =
+    Provider<VisualBacktestingRepository>((ref) => VisualBacktestingRepository(
         ref.watch(appDatabaseProvider),
         ref.watch(tableChangesProvider),
         ref.watch(clockProvider)));
 
-final reviewsRepositoryProvider = Provider<ReviewsRepository>((ref) => ReviewsRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final reviewsRepositoryProvider = Provider<ReviewsRepository>((ref) =>
+    ReviewsRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
-final searchRepositoryProvider = Provider<SearchRepository>((ref) => SearchRepository(
-    ref.watch(appDatabaseProvider), ref.watch(tableChangesProvider), ref.watch(clockProvider)));
+final searchRepositoryProvider = Provider<SearchRepository>((ref) =>
+    SearchRepository(ref.watch(appDatabaseProvider),
+        ref.watch(tableChangesProvider), ref.watch(clockProvider)));
 
 final caseReportProvider = Provider<CaseReport>((ref) => CaseReport(
     ref.watch(researchRepositoryProvider),
@@ -102,13 +115,15 @@ final activePlanProvider = StreamProvider.autoDispose<Rec?>(
     (ref) => ref.watch(learningRepositoryProvider).watchActivePlan());
 
 final lessonsProvider = StreamProvider.autoDispose.family<List<Rec>, String>(
-    (ref, planId) => ref.watch(learningRepositoryProvider).watchLessons(planId));
+    (ref, planId) =>
+        ref.watch(learningRepositoryProvider).watchLessons(planId));
 
 final lessonProvider = StreamProvider.autoDispose.family<Rec?, String>(
     (ref, id) => ref.watch(learningRepositoryProvider).watchLesson(id));
 
 final lessonMinutesProvider = StreamProvider.autoDispose.family<int, String>(
-    (ref, id) => ref.watch(learningRepositoryProvider).watchMinutesForLesson(id));
+    (ref, id) =>
+        ref.watch(learningRepositoryProvider).watchMinutesForLesson(id));
 
 final notesProvider = StreamProvider.autoDispose.family<List<Rec>, NoteFilter>(
     (ref, filter) => ref.watch(notesRepositoryProvider).watch(filter));
@@ -119,23 +134,28 @@ final casesProvider = StreamProvider.autoDispose.family<List<Rec>, CaseFilter>(
 final caseProvider = StreamProvider.autoDispose.family<Rec?, String>(
     (ref, id) => ref.watch(researchRepositoryProvider).watchCase(id));
 
-final caseEntriesProvider = StreamProvider.autoDispose.family<List<Rec>, String>(
-    (ref, caseId) => ref.watch(researchRepositoryProvider).watchEntries(caseId));
+final caseEntriesProvider = StreamProvider.autoDispose
+    .family<List<Rec>, String>((ref, caseId) =>
+        ref.watch(researchRepositoryProvider).watchEntries(caseId));
 
 final caseImagesProvider = StreamProvider.autoDispose.family<List<Rec>, String>(
-    (ref, caseId) => ref.watch(researchRepositoryProvider).watchImagesFor(caseId: caseId));
+    (ref, caseId) =>
+        ref.watch(researchRepositoryProvider).watchImagesFor(caseId: caseId));
 
-final tradeImagesProvider = StreamProvider.autoDispose.family<List<Rec>, String>(
-    (ref, tradeId) => ref.watch(researchRepositoryProvider).watchImagesFor(tradeId: tradeId));
+final tradeImagesProvider = StreamProvider.autoDispose
+    .family<List<Rec>, String>((ref, tradeId) =>
+        ref.watch(researchRepositoryProvider).watchImagesFor(tradeId: tradeId));
 
 final imageProvider = StreamProvider.autoDispose.family<Rec?, String>(
     (ref, id) => ref.watch(researchRepositoryProvider).watchImage(id));
 
-final galleryProvider = StreamProvider.autoDispose.family<List<Rec>, GalleryFilter>(
-    (ref, filter) => ref.watch(researchRepositoryProvider).watchGallery(filter));
+final galleryProvider = StreamProvider.autoDispose
+    .family<List<Rec>, GalleryFilter>((ref, filter) =>
+        ref.watch(researchRepositoryProvider).watchGallery(filter));
 
-final tradesProvider = StreamProvider.autoDispose.family<List<Rec>, TradeFilter>(
-    (ref, filter) => ref.watch(tradesRepositoryProvider).watch(filter));
+final tradesProvider = StreamProvider.autoDispose
+    .family<List<Rec>, TradeFilter>(
+        (ref, filter) => ref.watch(tradesRepositoryProvider).watch(filter));
 
 final tradesSummaryProvider = StreamProvider.autoDispose<List<Rec>>(
     (ref) => ref.watch(tradesRepositoryProvider).watchSummary());
@@ -143,8 +163,21 @@ final tradesSummaryProvider = StreamProvider.autoDispose<List<Rec>>(
 final visualStrategiesProvider = StreamProvider.autoDispose<List<Rec>>(
     (ref) => ref.watch(visualBacktestingRepositoryProvider).watchStrategies());
 
-final visualTestsProvider = StreamProvider.autoDispose.family<List<Rec>, String?>(
-    (ref, strategyId) => ref
+final visualStrategyVersionsProvider = StreamProvider.autoDispose
+    .family<List<Rec>, String>((ref, strategyId) => ref
+        .watch(visualBacktestingRepositoryProvider)
+        .watchStrategyVersions(strategyId));
+
+final visualExperimentsProvider = StreamProvider.autoDispose<List<Rec>>(
+    (ref) => ref.watch(visualBacktestingRepositoryProvider).watchExperiments());
+
+final visualExperimentVariantsProvider = StreamProvider.autoDispose
+    .family<List<Rec>, String>((ref, experimentId) => ref
+        .watch(visualBacktestingRepositoryProvider)
+        .watchExperimentVariants(experimentId));
+
+final visualTestsProvider = StreamProvider.autoDispose
+    .family<List<Rec>, String?>((ref, strategyId) => ref
         .watch(visualBacktestingRepositoryProvider)
         .watchTests(strategyId: strategyId));
 
@@ -152,12 +185,14 @@ final visualTestResultsProvider = StreamProvider.autoDispose<List<Rec>>(
     (ref) => ref.watch(visualBacktestingRepositoryProvider).watchTestResults());
 
 /// Key format: "<table>|<id>", for example "research_cases|abc".
-final linkedProvider = StreamProvider.autoDispose.family<List<LinkedItem>, String>((ref, key) {
+final linkedProvider =
+    StreamProvider.autoDispose.family<List<LinkedItem>, String>((ref, key) {
   final parts = key.split('|');
   return ref.watch(linksRepositoryProvider).watchLinked(parts[0], parts[1]);
 });
 
-final reviewProvider = StreamProvider.autoDispose.family<Rec?, String>((ref, key) {
+final reviewProvider =
+    StreamProvider.autoDispose.family<Rec?, String>((ref, key) {
   final parts = key.split('|'); // "<kind>|<periodStart>"
   return ref.watch(reviewsRepositoryProvider).watchReview(parts[0], parts[1]);
 });
@@ -169,7 +204,8 @@ final instrumentsProvider = FutureProvider.autoDispose<List<String>>(
     (ref) => ref.watch(researchRepositoryProvider).instruments());
 
 /// Key format: "<table>|<id>".
-final tagNamesProvider = StreamProvider.autoDispose.family<List<String>, String>((ref, key) {
+final tagNamesProvider =
+    StreamProvider.autoDispose.family<List<String>, String>((ref, key) {
   final parts = key.split('|');
   return ref.watch(tagsRepositoryProvider).watchNamesFor(parts[0], parts[1]);
 });

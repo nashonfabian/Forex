@@ -83,12 +83,20 @@ class _HistoricalReplayScreenState extends ConsumerState<HistoricalReplayScreen>
         sourceName: _sourceController.text,
       );
       if (!mounted) return;
-      if (result.imported && result.datasetId != null) {
+      if (result.datasetId != null) {
         setState(() {
           _datasetId = result.datasetId;
         });
         await _loadDatasets();
-        messenger?.showSnackBar(const SnackBar(content: Text('Imported historical dataset.')));
+        messenger?.showSnackBar(
+          SnackBar(
+            content: Text(
+              result.duplicate
+                  ? 'This dataset is already imported; selected the saved copy.'
+                  : 'Imported historical dataset.',
+            ),
+          ),
+        );
       } else {
         final message = result.validation.errors.isEmpty
             ? 'CSV import failed.'

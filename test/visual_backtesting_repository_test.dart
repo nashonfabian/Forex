@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_market_lab/data/backtesting/strategy_definition.dart';
 import 'package:my_market_lab/data/repositories/visual_backtesting_repository.dart';
 
 void main() {
@@ -93,5 +94,90 @@ void main() {
     final stats = VisualBacktestStats.fromTests(results);
 
     expect(stats.maxDrawdownR, 4.0);
+  });
+
+  test('checklist blocks entries until required entry rule is satisfied', () {
+    final definition = legacyVisualStrategyDefinition(
+      name: 'Test',
+      entryConditions: 'Confirm break and close.',
+      exitConditions: 'Exit at invalidation.',
+      stopLossRules: 'Beyond swing.',
+      takeProfitRules: 'At target.',
+      stayOutConditions: 'Avoid news.',
+      sessions: const ['London'],
+      timeframes: const ['15M'],
+    );
+    final entryRule = definition.rules.firstWhere(
+      (rule) => rule.stageId == 'legacy-stage-entry',
+    );
+
+    final waiting = buildVisualChecklist(
+      definition: definition,
+      scenarioId: definition.scenarios.first.id,
+      states: const {},
+    );
+    expect(waiting.canRecordEntry, isFalse);
+    expect(waiting.entryBlockReason, contains('mandatory stay-out'));
+
+    final ready = buildVisualChecklist(
+      definition: definition,
+      scenarioId: definition.scenarios.first.id,
+      states: {
+        entryRule.id: 'satisfied',
+        'legacy-rule-stay_out': 'not_satisfied',
+      },
+    );
+    expect(ready.canRecordEntry, isTrue);
+    expect(definition.timeframes, ['M15']);
+  });
+
+  test('satisfied stay-out rule blocks entry even when entry trigger is met',
+      () {
+    final definition = legacyVisualStrategyDefinition(
+      name: 'Test',
+      entryConditions: 'Confirm break and close.',
+      exitConditions: 'Exit at invalidation.',
+      stopLossRules: 'Beyond swing.',
+      takeProfitRules: 'At target.',
+      stayOutConditions: 'Avoid news.',
+      sessions: const ['London'],
+      timeframes: const ['15M'],
+    );
+    final entryRule = definition.rules.firstWhere(
+      (rule) => rule.stageId == 'legacy-stage-entry',
+    );
+    final stayOutRule = definition.rules.firstWhere(
+      (rule) => rule.stageId == 'legacy-stage-stay_out',
+    );
+
+    final checklist = buildVisualChecklist(
+      definition: definition,
+      scenarioId: definition.scenarios.first.id,
+      states: {
+        entryRule.id: 'satisfied',
+        stayOutRule.id: 'satisfied',
+      },
+    );
+
+    expect(checklist.canRecordEntry, isFalse);
+    expect(checklist.entryBlockReason, contains('stay-out'));
+  });
+
+  test('statistics expose incomplete and missing-quality samples', () {
+    final stats = VisualBacktestStats.fromTests([
+      {
+        'tested_at': '2026-01-01',
+        'outcome': 'win',
+        'result_r': 1.0,
+        'rule_adherence': 'violated',
+      },
+      {'tested_at': '2026-01-02', 'outcome': 'pending'},
+      {'tested_at': '2026-01-03', 'outcome': 'inconclusive'},
+    ]);
+
+    expect(stats.incompleteCount, 2);
+    expect(stats.ruleViolationCount, 1);
+    expect(stats.missingAdherenceSampleCount, 0);
+    expect(stats.testCount, 1);
   });
 }
